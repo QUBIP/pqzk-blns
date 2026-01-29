@@ -18,10 +18,11 @@
 #include <algorithm>
 
 #include "params.h"
-#include "LHC.h"
+#include "Rej.h"
 #include "Hash.h"
 #include "Squares.h"
 #include "serialize.h"
+#include "Lattice.h"
 
 typedef struct
 {
