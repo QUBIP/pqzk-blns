@@ -244,7 +244,7 @@ void Prove_Com(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, cons
 
     b3 = 0;
 
-    // 8.1 while (b3 == 0 ∧ idx < N) do
+    // 8. while (b3 == 0 ∧ idx < N) do
     while((b3 == 0) && (idx < N1))
     {    
         // 9. Increment idx
@@ -274,7 +274,7 @@ void Prove_Com(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, cons
             Pi.t_A[i] = poly_mult_hat(crs[0][i], s_1) + poly_mult_hat(crs[1][i], s_2);
         }
         
-        // 12.3 Random generation of y_3 ∈ R^^(256/d_hat)_(q_hat)
+        // 12. Random generation of y_3 ∈ R^^(256/d_hat)_(q_hat)
         y_3.SetLength(n256);
 
         for(i=0; i<n256; i++)
@@ -282,7 +282,7 @@ void Prove_Com(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, cons
             polySampler_hat(y_3[i], s3_goth_d);
         }
 
-        // 15. t_y = B_y*s2 + y3,  t_y ∈ R^^(256/d_hat)_(q_hat)
+        // 13. t_y = B_y*s2 + y3,  t_y ∈ R^^(256/d_hat)_(q_hat)
         Pi.t_y.SetLength(n256);
         
         for(i=0; i<n256; i++)
@@ -290,7 +290,7 @@ void Prove_Com(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, cons
             Pi.t_y[i] = poly_mult_hat(crs[2][i], s_2) + y_3[i];
         }
 
-        // 19. a1 ← (t_A, t_y)
+        // 14. a1 ← (t_A, t_y)
         Pi_bytes = *Pi_ptr;
         // NOTE: copy the initial status structure, already initialized with (crs, x) before row 8        
         state = Hash_Copy(state0);        
@@ -300,7 +300,7 @@ void Prove_Com(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, cons
         Pi_bytes[0] = 0;
         Pi_bytes += len_valid;
 
-        // Serialize and Hash (t_A, t_y) in the proof Pi
+        // Serialize (t_A, t_y) in the proof Pi and Hash a_1 ← (t_A, t_y)
         serialize_minbyte_vec_poly_zz_pX(Pi_bytes, len_t_A, n, d_hat, nbits, Pi.t_A);
         Hash_Update(state, Pi_bytes, len_t_A);
         Pi_bytes += len_t_A;
@@ -309,16 +309,16 @@ void Prove_Com(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, cons
         Pi_bytes += len_t_y;
 
 
-        // 20. (R_goth_0, R_goth_1) = H(1, crs, x, a_1)
-        // 21. R_goth = R_goth_0 - R_goth_1
+        // 15. (R_goth_0, R_goth_1) = H(crs, x, a1, 1)
+        // 16. R_goth = R_goth_0 - R_goth_1
         HCom1(R_goth, state, m1);
         // NOTE: R_goth ∈ {-1, 0, 1}^(256 x m_1*d_hat) ⊂ Z^(256 x m_1*d_hat)_(q_hat)
         //       equivalent to (R_goth_0 - R_goth_1) in BLNS
 
-        // 22. coeffs_y3 ← Coeffs(y_3),   coeffs_y3 ∈ Z^(256)_(q_hat)   
+        // 17. coeffs_y3 ← Coeffs(y_3),   coeffs_y3 ∈ Z^(256)_(q_hat)   
         CoeffsHat(coeffs_y3, y_3, n256);
         
-        // 23.  z_3 = y_3 + R_goth*s,   z_3 ∈ Z^(256)_(q_hat)
+        // 18.  z_3 = y_3 + R_goth*s,   z_3 ∈ Z^(256)_(q_hat)
         coeffs_R_goth_mult_s1.SetLength(256);
         Pi.z_3.SetLength(256);
         // NOTE: This equation is performed in Z not in polynomials, needing Coeffs() transformation of y_3, R_goth, and s_1
@@ -331,13 +331,13 @@ void Prove_Com(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, cons
             Pi.z_3[i] = coeffs_y3[i] + coeffs_R_goth_mult_s1[i];            
         }
         
-        // 24. b3 ← Rej (z_3, R_goth * s, s3_goth, M_3),    b3 ∈ {0, 1}
+        // 19. b3 ← Rej (z_3, R_goth * s, s3_goth, M_3),    b3 ∈ {0, 1}
         b3 = Rej_v_zzp(Pi.z_3, coeffs_R_goth_mult_s1, q1_hat, s3_goth, M_3);
 
-    } // End of while loop (row 8.1)
+    } // End of while loop (row 8)
 
 
-    // 13. Random generation of g ∈ R^^(tau)_(q_hat)
+    // 20. Random generation of g ∈ R^^(tau)_(q_hat)
     g.SetLength(tau_Com);
 
     for(i=0; i<tau_Com; i++)
@@ -345,11 +345,11 @@ void Prove_Com(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, cons
         g[i] = random_zz_pX(d_hat);            
         // g[i][0] = 0;
         SetCoeff(g[i], 0, 0);     
-        // NOTE: the constant term of g (x^0) must be zero 
+        // NOTE: the constant term of g[i] (x^0) must be zero 
     }
 
     
-    // 16. t_g = B_g*s2 + g,  t_g ∈ R^^(tau)_(q_hat)
+    // 21. t_g = B_g*s2 + g,  t_g ∈ R^^(tau)_(q_hat)
     Pi.t_g.SetLength(tau_Com);
 
     for(i=0; i<tau_Com; i++)
@@ -358,7 +358,7 @@ void Prove_Com(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, cons
     }
 
     
-    // 25. a2 ← (z_3, t_g)
+    // 22. a2 ← (z_3, t_g)
     serialize_minbyte_vec_zz_p(Pi_bytes, len_z_3, 256, nbits, Pi.z_3);
     Hash_Update(state, Pi_bytes, len_z_3);
     Pi_bytes += len_z_3;
@@ -367,7 +367,7 @@ void Prove_Com(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, cons
     Pi_bytes += len_t_g;
 
 
-    // 26. gamma ← H(2, crs, x, a1, a2),   gamma ∈ Z^(tau_Com x 256+d0+1)_(q_hat)
+    // 23. gamma ← H(crs, x, a1, a2, 2),   gamma ∈ Z^(tau_Com x 256+d0+1)_(q_hat)
     HCom2(gamma, state);
 
 
@@ -451,10 +451,10 @@ void Prove_Com(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, cons
     h_part3   = poly_mult_hat(sigma_s_1, s_1) + conv<zz_p>(-B_goth2);
     
 
-    // 27. for i ∈ [τ] do
+    // 24. for i ∈ [τ] do
     for(i=0; i<tau_Com; i++) 
     {
-        // 28. Compute h_i,   h_i ∈ R^_(q_hat)
+        // 25. Compute h_i,   h_i ∈ R^_(q_hat)
         acc = g[i];
 
         for(j=0; j<256; j++)        
@@ -469,20 +469,19 @@ void Prove_Com(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, cons
         
         acc += gamma[i][256+d0] * h_part3;
                 
-        // 29. h ← (h_1, . . . , h_τ),   h ∈ R^^(tau)_(q_hat)
+        // 26. h ← (h_1, . . . , h_τ),   h ∈ R^^(tau)_(q_hat)
         Pi.h[i] = acc;
     }
 
-    // 30. a_3 ← h,   a_3 ∈ R^^(tau)_(q_hat)
+    // 27. a3 ← h,   a3 ∈ R^^(tau)_(q_hat)
     serialize_minbyte_vec_poly_zz_pX(Pi_bytes, len_h, tau_Com, d_hat, nbits, Pi.h);
     Hash_Update(state, Pi_bytes, len_h);
     Pi_bytes += len_h;
 
-
-    // 31. μ ← H(3, crs, x, a1, a2, a3),   μ ∈ R^^(tau)_(q_hat)        
+    // 28. μ ← H(crs, x, a1, a2, a3, 3),   μ ∈ R^^(tau)_(q_hat)        
     HCom3(mu, state);
 
-    // 32. B   ← [B_y; B_g],   B ∈ R^^((256/d_hat + tau) x m2)_(q_hat)
+    // 29. B   ← [B_y; B_g],   B ∈ R^^((256/d_hat + tau) x m2)_(q_hat)
     B.SetDims((n256 + tau_Com), m2);
     
     for(i=0; i<n256; i++) 
@@ -496,7 +495,7 @@ void Prove_Com(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, cons
     }
 
 
-    // 34. Definition of D_2_(2,1) ∈ R^^(m1 x m1)_(q_hat) 
+    // 30. Definition of D_2_(2,1) ∈ R^^(m1 x m1)_(q_hat) 
     D2_2_1.SetDims(m1, m1);        
     // sum = 0;
     clear(sum);
@@ -513,7 +512,7 @@ void Prove_Com(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, cons
     // NOTE: sum in the diagonal of D2_2_1, zeros in the rest
 
 
-    // 35. Construction of d_1 ∈ R^^(2*m1+2(256/d_hat+τ))_(q_hat)
+    // 31. Construction of d_1 ∈ R^^(2*m1+2(256/d_hat+τ))_(q_hat)
     d_1.SetLength(m1_n256_tau);
 
     for(i=0; i<m1_n256_tau; i++)
@@ -603,7 +602,7 @@ void Prove_Com(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, cons
     state0 = Hash_Copy(state);
 
 
-    // 8.2 while (rst == 0 ∧ idx < N) do
+    // 32. while (rst == 0 ∧ idx < N) do
     while((rst == 0) && (idx < N1))
     {
         // NOTE: restore the pointer to Pi and the status structure of the Hash function
@@ -612,12 +611,12 @@ void Prove_Com(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, cons
         
         b1 = 0; b2 = 0;
        
-        // 11. Increment idx
+        // 33. Increment idx
         idx = idx + 1;
         // cout << "idx = " << idx << endl;
 
         
-        // 12.1 Random generation of y_1 ∈ R^^m1_(q_hat)
+        // 34.1 Random generation of y_1 ∈ R^^m1_(q_hat)
         y_1.SetLength(m1);
         
         for(i=0; i<m1; i++)
@@ -625,7 +624,7 @@ void Prove_Com(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, cons
             polySampler_hat(y_1[i], s1_goth_d);
         }
         
-        // 12.2 Random generation of y_2 ∈ R^^m2_(q_hat)
+        // 34.2 Random generation of y_2 ∈ R^^m2_(q_hat)
         y_2.SetLength(m2);
 
         for(i=0; i<m2; i++)
@@ -634,7 +633,7 @@ void Prove_Com(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, cons
         }
 
 
-        // 33. y ← (y1; σ(y1); −B*y2; σ(-B*y2)),     y ∈ R^^(2*m1 + 2*(256/d_hat + tau))_(q_hat)
+        // 35. y ← (y1; σ(y1); −B*y2; σ(-B*y2)),     y ∈ R^^(2*m1 + 2*(256/d_hat + tau))_(q_hat)
         y.SetLength( m1_n256_tau );
 
         for(i=0; i<m1; i++) 
@@ -677,7 +676,7 @@ void Prove_Com(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, cons
         }
 
 
-        // 14. w = A1*y1 + A2*y2,  w ∈ R^^(n)_(q_hat)
+        // 36. w = A1*y1 + A2*y2,  w ∈ R^^(n)_(q_hat)
         Pi.w.SetLength(n);
         // NOTE: it is different from the input w (= w0, from Prove_Init)
         
@@ -687,7 +686,7 @@ void Prove_Com(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, cons
         }
 
                         
-        // 36. Definition of f1 ∈ R^_(q_hat)
+        // 37. Definition of f1 ∈ R^_(q_hat)
         // 1st addend of f1, (σ(s_1)^T * D2_2_1 * y_1)
         D2_y.SetLength(m1);
 
@@ -719,11 +718,11 @@ void Prove_Com(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, cons
         // 38. Definition of t ∈ R^_(q_hat)
         Pi.t = poly_mult_hat(crs[4][0], s_2) + f1;
 
-        // 37. Definition of f0 ∈ R^_(q_hat)
+        // 39. Definition of f0 ∈ R^_(q_hat)
         Pi.f0 = poly_mult_hat(sigma_y_1, D2_y) + poly_mult_hat(crs[4][0], y_2);
-        // NOTE: D2_y = (D2_2_1 * y_1) was already computed in row 36 (1st addend of f1)
+        // NOTE: D2_y = (D2_2_1 * y_1) was already computed in row 37 (1st addend of f1)
 
-        // 39. a_4 ← (t, w, f0)
+        // 40. a4 ← (t, w, f0)
         serialize_minbyte_poly_zz_pX(Pi_bytes, len_t, d_hat, nbits, Pi.t);
         Hash_Update(state, Pi_bytes, len_t);
         Pi_bytes += len_t;
@@ -734,13 +733,13 @@ void Prove_Com(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, cons
         Hash_Update(state, Pi_bytes, len_f0);
         Pi_bytes += len_f0;
 
-        // 40. c ← H(4, crs, x, a1, a2, a3, a4),   c ∈ C ⊂ R^_(q_hat)
+        // 41. c ← H(crs, x, a1, a2, a3, a4, 4),   c ∈ C ⊂ R^_(q_hat)
         HCom4(c, state);
 
-        // 41. for i ∈ {1, 2} do
+        // 42. for i ∈ {1, 2} do
         // NOTE: for simplicity, next operations are duplicated with suffixes _1 and _2
 
-        // 42. z_i ← y_i + c*s_i,   z_i ∈ R^^(m_i)_(q_hat)
+        // 43. z_i ← y_i + c*s_i,   z_i ∈ R^^(m_i)_(q_hat)
         Pi.z_1.SetLength(m1);       
         c_s1.SetLength(m1);
         
@@ -750,7 +749,7 @@ void Prove_Com(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, cons
             Pi.z_1[i] = y_1[i] + c_s1[i];
         }
         
-        // 43. b_i ← Rej(z_i, c*s_i, s_i_goth, M_i),   b_i ∈ {0, 1} 
+        // 44. b_i ← Rej(z_i, c*s_i, s_i_goth, M_i),   b_i ∈ {0, 1} 
         b1 = Rej_v_zzpX(Pi.z_1, c_s1, q1_hat, s1_goth, M_1);
 
         // NOTE: if b1 == 0, continue the while loop
@@ -771,24 +770,16 @@ void Prove_Com(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, cons
         }            
 
         b2 = Rej_v_zzpX(Pi.z_2, c_s2, q1_hat, s2_goth, M_2);
-
-        // NOTE: if b2 == 0, continue the while loop
-        if (b2 == 0)
-        {            
-            rst = 0;
-            continue;
-        }
-
-
-        // 48. rst ← b1*b2
+        
+        // 45. rst ← b1*b2
         rst = b1*b2;
     
-    } // End of while loop (row 8.2)
+    } // End of while loop (row 32)
 
     delete  state0;
     delete  state;
 
-    // 49. if rst = 1 then return π
+    // 46. if rst = 1 then
     if (rst == 1)
     {
         // 47. π ← (t_A, t_y, z_3, t_g, h, t, w, f0, z_1, z_2)
@@ -806,11 +797,12 @@ void Prove_Com(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, cons
 
         idx_Com = idx;
         // cout << "idx_Com = " << idx_Com << endl;
+
+        // 48. return π
     }
-    // 50. else return ⊥
+
+    // 49. else return ⊥
     // NOTE: invalid proof, with Pi.valid = 0
-    
-    // return Pi;
 }
 
 
@@ -976,33 +968,28 @@ long Verify_Com(const uint8_t* seed_crs, const CRS_t& crs, const uint8_t* seed_i
     Pi_bytes += len_in;
 
 
-    // 6. a2 ← z_3,   a2 ∈ Z^256_(q_hat)
-    // a_2 << Pi.z_3;
-    
-    // 7. a_3 ← h,   a_3 ∈ R^^(tau)_(q_hat)    
-    // a_3 << Pi.h;
-    
-    // 8. a_4 ← (t, f0),   a_4 ∈ R^^2_(q_hat)
-    // a_4 << Pi.t << Pi.f0;
+    // 6. a2 ← (z_3, t_g)    
+    // 7. a3 ← h    
+    // 8. a4 ← (t, w, f0)
 
-    // 9. (R_goth_0, R_goth_1) = H(1, crs, x, a_1)    
+    // 9. (R_goth_0, R_goth_1) = H(crs, x, a1, 1)    
     // 10. R_goth = R_goth_0 - R_goth_1
     HCom1(R_goth, state, m1);
     // NOTE: R_goth ∈ {-1, 0, 1}^(256 x m_1*d_hat) ⊂ Z^(256 x m_1*d_hat)_(q_hat)
     //       equivalent to (R_goth_0 - R_goth_1) in BLNS
 
-    // 11. gamma ← H(2, crs, x, a1, a2),   gamma ∈ Z^(tau_Com x 256+d0+1)_(q_hat)
+    // 11. gamma ← H(crs, x, a1, a2, 2),   gamma ∈ Z^(tau_Com x 256+d0+1)_(q_hat)
     len_in = len_z_3 + len_t_g;
     Hash_Update(state, Pi_bytes, len_in);
     Pi_bytes += len_in;
     HCom2(gamma, state);
 
-    // 12. μ ← H(3, crs, x, a1, a2, a3),   μ ∈ R^^(tau)_(q_hat)        
+    // 12. μ ← H(crs, x, a1, a2, a3, 3),   μ ∈ R^^(tau)_(q_hat)        
     Hash_Update(state, Pi_bytes, len_h);
     Pi_bytes += len_h;
     HCom3(mu, state);
 
-    // 13. c ← H(4, crs, x, a1, a2, a3, a4),   c ∈ C ⊂ R^_(q_hat)
+    // 13. c ← H(crs, x, a1, a2, a3, a4, 4),   c ∈ C ⊂ R^_(q_hat)
     len_in = len_t + len_w + len_f0;
     Hash_Update(state, Pi_bytes, len_in);
     // Pi_bytes += len_in;
