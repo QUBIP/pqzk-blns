@@ -249,14 +249,8 @@ void Prove_ISIS(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, con
     //    u ← Coeffs^−1(u0) 
     CoeffsInvHat(u, conv<vec_zz_p>(w0[2]), t_d);    // u ∈ R^^(t/d_hat)_(q_hat)
     
-       
-    // 7. Initialize rst ← 0,   rst ∈ Z, scalar
-    rst     = 0;
-    
-    // 8. Initialize idx ← 0,   idx ∈ N, scalar
-    idx     = 0;
-    
-    // 9. s_1 ← (s, r, u),   s_1 ∈ R^^(m1)_(q_hat)
+        
+    // 7. s_1 ← (s, r, u),   s_1 ∈ R^^(m1)_(q_hat)
     s_1.SetLength(m1);
     // NOTE: m1 := ((m + 2)·d + d_hat      + (|idx_hid|·h + ℓr·d + d_hat)    + t) / d_hat
     //           = ((m0+2)*d0+d_hat)/d_hat + (idx_hid*h0+lr0*d0+d_hat)/d_hat + t0/d_hat
@@ -280,11 +274,17 @@ void Prove_ISIS(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, con
         s_1[k] = u[i];
         k++;      
     }
-
-
-    // 22. coeffs_s1 ← Coeffs(s_1),   coeffs_s1 ∈ Z^(m1*d_hat)_(q_hat)
+    
+    
+    // 8. coeffs_s1 ← Coeffs(s_1),   coeffs_s1 ∈ Z^(m1*d_hat)_(q_hat)
     CoeffsHat(coeffs_s1, s_1, m1);
     // NOTE: coeffs_s1 contains the same coefficients listed in w0
+
+    // 9. Initialize rst ← 0,   rst ∈ Z, scalar
+    rst     = 0;
+    
+    // 10. Initialize idx ← 0,   idx ∈ N, scalar
+    idx     = 0;
 
 
     // Initialize the custom Hash function
@@ -339,14 +339,14 @@ void Prove_ISIS(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, con
 
     b3 = 0;
     
-    // 10.1 while (b3 == 0 ∧ idx < N) do
+    // 11. while (b3 == 0 ∧ idx < N) do
     while((b3 == 0) && (idx < N1))
     {
-        // 11. Increment idx
+        // 12. Increment idx
         idx = idx + 1;
         // cout << "idx = " << idx << endl;
         
-        // 12. Random generation of s_2 ∈ R^^(m2)_(q_hat)
+        // 13. Random generation of s_2 ∈ R^^(m2)_(q_hat)
         s_2.SetLength(m2);
         
         for(i=0; i<m2; i++)
@@ -362,7 +362,7 @@ void Prove_ISIS(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, con
         }
 
 
-        // 13. t_A = A_1*s_1 + A_2*s_2,  t_A ∈ R^^(n)_(q_hat)
+        // 14. t_A = A_1*s_1 + A_2*s_2,  t_A ∈ R^^(n)_(q_hat)
         Pi.t_A.SetLength(n);
         
         for(i=0; i<n; i++)
@@ -371,7 +371,7 @@ void Prove_ISIS(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, con
         }
 
         
-        // 14.3 Random generation of y_3 ∈ R^^(256/d_hat)_(q_hat)
+        // 15. Random generation of y_3 ∈ R^^(256/d_hat)_(q_hat)
         y_3.SetLength(n256);
 
         for(i=0; i<n256; i++)
@@ -380,7 +380,7 @@ void Prove_ISIS(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, con
         }
 
 
-        // 17. t_y = B_y*s2 + y3,  t_y ∈ R^^(256/d_hat)_(q_hat)
+        // 16. t_y = B_y*s2 + y3,  t_y ∈ R^^(256/d_hat)_(q_hat)
         Pi.t_y.SetLength(n256);
         
         for(i=0; i<n256; i++)
@@ -389,9 +389,9 @@ void Prove_ISIS(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, con
         }
 
 
-        // 19. a_1 ← (t_A, t_y) 
+        // 17. a_1 ← (t_A, t_y) 
         Pi_bytes = *Pi_ptr;
-        // NOTE: copy the initial status structure, already initialized with (crs, x) before row 10        
+        // NOTE: copy the initial status structure, already initialized with (crs, x) before row 11        
         state = Hash_Copy(state0);
 
         // Initialize Pi with a flag to identify an invalid proof
@@ -399,7 +399,7 @@ void Prove_ISIS(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, con
         Pi_bytes[0] = 0;
         Pi_bytes += len_valid;
 
-        // Serialize and Hash (t_A, t_y) in the proof Pi
+        // Serialize (t_A, t_y) in the proof Pi and Hash a_1 ← (t_A, t_y)
         serialize_minbyte_vec_poly_zz_pX(Pi_bytes, len_t_A, n, d_hat, nbits, Pi.t_A);
         Hash_Update(state, Pi_bytes, len_t_A);
         Pi_bytes += len_t_A;
@@ -408,18 +408,16 @@ void Prove_ISIS(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, con
         Pi_bytes += len_t_y;
 
         
-        // 20. (R_goth_0, R_goth_1) = H(1, crs, x, a_1)
-        // 21. R_goth = R_goth_0 - R_goth_1
+        // 18. (R_goth_0, R_goth_1) = H(crs, x, a_1, 1)
+        // 19. R_goth = R_goth_0 - R_goth_1
         HISIS1(R_goth, state, m1);
         // NOTE: R_goth ∈ {-1, 0, 1}^(256 x m_1*d_hat) ⊂ Z^(256 x m_1*d_hat)_(q_hat)
         //       equivalent to (R_goth_0 - R_goth_1) in BLNS
-        
-                
-        // 23. coeffs_y3 ← Coeffs(y_3),   coeffs_y3 ∈ Z^(256)_(q_hat)
+                        
+        // 20. coeffs_y3 ← Coeffs(y_3),   coeffs_y3 ∈ Z^(256)_(q_hat)
         CoeffsHat(coeffs_y3, y_3, n256);
-
         
-        // 24.  z_3 = y_3 + R_goth*s_1,   z_3 ∈ Z^(256)_(q_hat)
+        // 21.  z_3 = y_3 + R_goth*s_1,   z_3 ∈ Z^(256)_(q_hat)
         coeffs_R_goth_mult_s1.SetLength(256);
         Pi.z_3.SetLength(256);
         // NOTE: This equation is performed in Z not in polynomials, needing Coeffs() transformation of y_3, R_goth, and s_1
@@ -433,13 +431,13 @@ void Prove_ISIS(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, con
         }
 
         
-        // 25. b3 ← Rej (z_3, R_goth * s_1, s3_goth, M_3),    b3 ∈ {0, 1}
+        // 22. b3 ← Rej (z_3, R_goth * s_1, s3_goth, M_3),    b3 ∈ {0, 1}
         b3 = Rej_v_zzp(Pi.z_3, coeffs_R_goth_mult_s1, q2_hat, s3_goth, M_3);
         
-    } // End of while loop (row 10.1)
+    } // End of while loop (row 11)
 
 
-    // 15. Random generation of g ∈ R^^(tau)_(q_hat)
+    // 23. Random generation of g ∈ R^^(tau)_(q_hat)
     g.SetLength(tau_ISIS);
 
     for(i=0; i<tau_ISIS; i++)
@@ -447,11 +445,11 @@ void Prove_ISIS(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, con
         g[i] = random_zz_pX(d_hat);            
         // g[i][0] = 0;
         SetCoeff(g[i], 0, 0);
-        // NOTE: the constant term of g (x^0) must be zero 
+        // NOTE: the constant term of g[i] (x^0) must be zero 
     }
 
     
-    // 18. t_g = B_g*s2 + g,  t_g ∈ R^^(tau)_(q_hat)
+    // 24. t_g = B_g*s2 + g,  t_g ∈ R^^(tau)_(q_hat)
     Pi.t_g.SetLength(tau_ISIS);
     
     for(i=0; i<tau_ISIS; i++)
@@ -460,7 +458,7 @@ void Prove_ISIS(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, con
     }
     
 
-    // 26. a_2 ← (z_3, t_g)
+    // 25. a_2 ← (z_3, t_g)
     serialize_minbyte_vec_zz_p(Pi_bytes, len_z_3, 256, nbits, Pi.z_3);
     Hash_Update(state, Pi_bytes, len_z_3);
     Pi_bytes += len_z_3;
@@ -469,7 +467,7 @@ void Prove_ISIS(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, con
     Pi_bytes += len_t_g;
     
     
-    // 27. gamma ← H(2, crs, x, a1, a2),   gamma ∈ Z^(tau_ISIS x 256+d0+3)_(q_hat)
+    // 26. gamma ← H(crs, x, a1, a2, 2),   gamma ∈ Z^(tau_ISIS x 256+d0+3)_(q_hat)
     HISIS2(gamma, state);
     // NOTE: gamma has 256+d0+3 columns in ISIS, while 256+d0+1 in Com
     
@@ -538,7 +536,7 @@ void Prove_ISIS(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, con
         CoeffsInvHat(r_j,  R_goth[j], m1);
         sigma_map(sigma_r_[j], r_j, d_hat);
 
-        // NOTE: (r_s,j , r_r,j , r_u,j ) ← r_j  at row 39, where:   
+        // NOTE: (r_s,j , r_r,j , r_u,j ) ← r_j  at row 37, where:   
         //       r_s,j ∈ R^^(((m+2)d+d_hat)/d_hat)_(q_hat)
         //       r_r,j ∈ R^^((|idx_hid|·h+ℓr·d+d_hat)/d_hat)_(q_hat)
         //       r_u,j ∈ R^^(t/d_hat)_(q_hat)
@@ -624,10 +622,10 @@ void Prove_ISIS(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, con
     h_part5 = poly_mult_hat(sigma_u_m_ones, u);
 
     
-    // 28. for i ∈ [τ] do
+    // 27. for i ∈ [τ] do
     for(i=0; i<tau_ISIS; i++) 
     {
-        // 29. Compute h_i,   h_i ∈ R^_(q_hat)
+        // 28. Compute h_i,   h_i ∈ R^_(q_hat)
         acc = g[i];
 
         for(j=0; j<256; j++)        
@@ -644,22 +642,22 @@ void Prove_ISIS(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, con
                 gamma[i][256+d0+1] * h_part4 +  
                 gamma[i][256+d0+2] * h_part5;
                             
-        // 30. h ← (h_1, . . . , h_τ),   h ∈ R^^(τ)_(q_hat)
+        // 29. h ← (h_1, . . . , h_τ),   h ∈ R^^(τ)_(q_hat)
         Pi.h[i] = acc;
     }
 
 
-    // 31. a_3 ← h,   a_3 ∈ R^^(τ)_(q_hat)
+    // 30. a_3 ← h,   a_3 ∈ R^^(τ)_(q_hat)
     serialize_minbyte_vec_poly_zz_pX(Pi_bytes, len_h, tau_ISIS, d_hat, nbits, Pi.h);
     Hash_Update(state, Pi_bytes, len_h);
     Pi_bytes += len_h;
 
 
-    // 32. μ ← H(3, crs, x, a1, a2, a3),   μ ∈ R^^(τ)_(q_hat)
+    // 31. μ ← H(crs, x, a1, a2, a3, 3),   μ ∈ R^^(τ)_(q_hat)
     HISIS3(mu, state);
 
 
-    // 33. B   ← [B_y; B_g],   B ∈ R^^((256/d_hat + tau) x m2)_(q_hat)
+    // 32. B   ← [B_y; B_g],   B ∈ R^^((256/d_hat + tau) x m2)_(q_hat)
     B.SetDims((n256 + tau_ISIS), m2);
     
     for(i=0; i<n256; i++) 
@@ -673,9 +671,9 @@ void Prove_ISIS(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, con
     }
 
     
-    // 35. δ_1 ← Sum_(i=1,τ){ μ_i · γ_(i,256+d+1) },   δ_1 ∈ R^^_(q_hat)
-    // 36. δ_2 ← Sum_(i=1,τ){ μ_i · γ_(i,256+d+2) },   δ_2 ∈ R^^_(q_hat)
-    // 37. δ_3 ← Sum_(i=1,τ){ μ_i · γ_(i,256+d+3) },   δ_3 ∈ R^^_(q_hat)
+    // 33. δ_1 ← Sum_(i=1,τ){ μ_i · γ_(i,256+d+1) },   δ_1 ∈ R^^_(q_hat)
+    // 34. δ_2 ← Sum_(i=1,τ){ μ_i · γ_(i,256+d+2) },   δ_2 ∈ R^^_(q_hat)
+    // 35. δ_3 ← Sum_(i=1,τ){ μ_i · γ_(i,256+d+3) },   δ_3 ∈ R^^_(q_hat)
     clear(delta_1);
     clear(delta_2);
     clear(delta_3);
@@ -688,7 +686,7 @@ void Prove_ISIS(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, con
     }
 
 
-    // 38. Definition of D_2_(2,1) ∈ R^^(m1 x m1)_(q_hat)
+    // 36. Definition of D_2_(2,1) ∈ R^^(m1 x m1)_(q_hat)
     D2_2_1.SetDims(m1, m1);
     
     for(i=0; i<(m2ddd); i++)
@@ -711,7 +709,7 @@ void Prove_ISIS(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, con
     }
 
     
-    // 39.  (r_s,j , r_r,j , r_u,j ) ← r_j,   
+    // 37.  (r_s,j , r_r,j , r_u,j ) ← r_j,   
     //       r_s,j ∈ R^^(((m+2)d+d_hat)/d_hat)_(q_hat)
     //       r_r,j ∈ R^^((|idx_hid|·h+ℓr·d+d_hat)/d_hat)_(q_hat)
     //       r_u,j ∈ R^^(t/d_hat)_(q_hat)
@@ -719,7 +717,7 @@ void Prove_ISIS(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, con
     // NOTE: σ(r_s,j), σ(r_r,j), σ(r_u,j), σ(c_r,j) already pre-computed
     
             
-    // 40. Construction of d_1 ∈ R^^(2*m1+2(256/d_hat+τ))_(q_hat)
+    // 38. Construction of d_1 ∈ R^^(2*m1+2(256/d_hat+τ))_(q_hat)
     d_1.SetLength(m1_n256_tau);
 
     for(i=0; i<m1_n256_tau; i++)
@@ -878,11 +876,11 @@ void Prove_ISIS(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, con
     // NOTE: save the pointer to the bytes already written in Pi, i.e. (t_A, t_y, z_3, t_g, h)
     Pi_bytes0 = Pi_bytes;
 
-    // NOTE: save the current status structure of the Hash function, already updated in previous steps       
+    // NOTE: save the current status structure of the Hash function, already updated in previous steps
     state0 = Hash_Copy(state);
 
 
-    // 10.2 while (rst == 0 ∧ idx < N) do
+    // 39. while (rst == 0 ∧ idx < N) do
     while((rst == 0) && (idx < N1))
     {
         // NOTE: restore the pointer to Pi and the status structure of the Hash function
@@ -891,12 +889,12 @@ void Prove_ISIS(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, con
         
         b1 = 0; b2 = 0;
        
-        // 11. Increment idx
+        // 40. Increment idx
         idx = idx + 1;
         // cout << "idx = " << idx << endl;
 
 
-        // 14.1 Random generation of y_1 ∈ R^^m1_(q_hat)
+        // 41.1 Random generation of y_1 ∈ R^^m1_(q_hat)
         y_1.SetLength(m1);        
 
         for(i=0; i<m1; i++)
@@ -904,7 +902,7 @@ void Prove_ISIS(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, con
             polySampler_hat(y_1[i], s1_goth_d);
         }
 
-        // 14.2 Random generation of y_2 ∈ R^^m2_(q_hat)
+        // 41.2 Random generation of y_2 ∈ R^^m2_(q_hat)
         y_2.SetLength(m2);
 
         for(i=0; i<m2; i++)
@@ -913,7 +911,7 @@ void Prove_ISIS(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, con
         }
 
         
-        // 34. y ← (y1; σ(y1); −B*y2; σ(-B*y2)),     y ∈ R^^(2*m1 + 2*(256/d_hat + tau))_(q_hat)
+        // 42. y ← (y1; σ(y1); −B*y2; σ(-B*y2)),     y ∈ R^^(2*m1 + 2*(256/d_hat + tau))_(q_hat)
         y.SetLength( m1_n256_tau );
 
         for(i=0; i<m1; i++) 
@@ -956,7 +954,7 @@ void Prove_ISIS(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, con
         }
 
         
-        // 16. w = A1*y1 + A2*y2,  w ∈ R^^(n)_(q_hat)
+        // 43. w = A1*y1 + A2*y2,  w ∈ R^^(n)_(q_hat)
         Pi.w.SetLength(n);
         // NOTE: it is different from the input w (= w0)
         
@@ -966,7 +964,7 @@ void Prove_ISIS(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, con
         }
         
         
-        // 41. Definition of f1 ∈ R^_(q_hat)
+        // 44. Definition of f1 ∈ R^_(q_hat)
         
         // 1st addend of f1, (σ(s_1)^T * D2_2_1 * y_1)
         D2_y.SetLength(m1);
@@ -996,16 +994,16 @@ void Prove_ISIS(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, con
         f1 += poly_mult_hat(d_1, y);
 
         
-        // 43. Definition of t ∈ R^_(q_hat)
+        // 45. Definition of t ∈ R^_(q_hat)
         Pi.t = poly_mult_hat(crs[4][0], s_2) + f1;
 
 
-        // 42. Definition of f0 ∈ R^_(q_hat)
+        // 46. Definition of f0 ∈ R^_(q_hat)
         Pi.f0 = poly_mult_hat(sigma_y_1, D2_y) + poly_mult_hat(crs[4][0], y_2);
-        // NOTE: D2_y = (D2_2_1 * y_1) was already computed in row 41 (1st addend of f1) 
+        // NOTE: D2_y = (D2_2_1 * y_1) was already computed in row 44 (1st addend of f1) 
 
         
-        // 44. a_4 ← (t, w, f0)
+        // 47. a_4 ← (t, w, f0)
         serialize_minbyte_poly_zz_pX(Pi_bytes, len_t, d_hat, nbits, Pi.t);
         Hash_Update(state, Pi_bytes, len_t);
         Pi_bytes += len_t;
@@ -1017,13 +1015,13 @@ void Prove_ISIS(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, con
         Pi_bytes += len_f0;
 
 
-        // 45. c ← H(4, crs, x, a1, a2, a3, a4),   c ∈ C ⊂ R^_(q_hat)
+        // 48. c ← H(crs, x, a1, a2, a3, a4, 4),   c ∈ C ⊂ R^_(q_hat)
         HISIS4(c, state);
 
-        // 46. for i ∈ {1, 2} do
+        // 49. for i ∈ {1, 2} do
         // NOTE: for simplicity, next operations are duplicated with suffixes _1 and _2
 
-        // 47. z_i ← y_i + c*s_i,   z_i ∈ R^^(m_i)_(q_hat)
+        // 50. z_i ← y_i + c*s_i,   z_i ∈ R^^(m_i)_(q_hat)
         Pi.z_1.SetLength(m1);        
         c_s1.SetLength(m1);
         
@@ -1033,7 +1031,7 @@ void Prove_ISIS(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, con
             Pi.z_1[i] = y_1[i] + c_s1[i]; 
         }                    
 
-        // 48. b_i ← Rej(z_i, c*s_i, s_i_goth, M_i),   b_i ∈ {0, 1} 
+        // 51. b_i ← Rej(z_i, c*s_i, s_i_goth, M_i),   b_i ∈ {0, 1} 
         b1 = Rej_v_zzpX(Pi.z_1, c_s1, q2_hat, s1_goth, M_1);
 
         // NOTE: if b1 == 0, continue the while loop
@@ -1055,28 +1053,20 @@ void Prove_ISIS(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, con
 
         b2 = Rej_v_zzpX(Pi.z_2, c_s2, q2_hat, s2_goth, M_2); 
 
-        // NOTE: if b2 == 0, continue the while loop
-        if (b2 == 0)
-        {            
-            rst = 0;
-            continue;
-        }
-
-        
-        // 50. rst ← b1*b2
+                
+        // 52. rst ← b1*b2
         rst = b1*b2;
     
-    } // End of while loop (row 10.2)
+    } // End of while loop (row 39)
 
     delete  state0;
     delete  state;
 
 
-    // 51. if rst = 1 then return π
+    // 53. if rst = 1 then 
     if (rst == 1)
-    {
-        
-        // 49. π ← (t_A, t_y, z_3, t_g, h, t, w, f0, z_1, z_2)
+    {        
+        // 54. π ← (t_A, t_y, z_3, t_g, h, t, w, f0, z_1, z_2)
         // NOTE:   (t_A, t_y, z_3, t_g, h, t, w, f0) already serialized in Pi_bytes        
         
         // Serialize z_1, z_2 in bytes at the end of the proof Pi
@@ -1087,16 +1077,16 @@ void Prove_ISIS(uint8_t** Pi_ptr, const uint8_t* seed_crs, const CRS_t& crs, con
         
         // NOTE: additional flag, to identify a valid proof Pi
         Pi.valid = 1;
-        (*Pi_ptr)[0] = 1;
+        (*Pi_ptr)[0] = 1;        
 
         idx_ISIS = idx;
         // cout << "idx_ISIS = " << idx_ISIS << endl;
+
+        // 55. return π
     }
 
-    // 52. else return ⊥
+    // 56. else return ⊥
     // NOTE: invalid proof, with Pi.valid = 0
-    
-    // return Pi;
 }
 
 
@@ -1162,7 +1152,6 @@ long Verify_ISIS(const uint8_t* seed_crs, const CRS_t& crs, const uint8_t* ipk_b
     B_goth_s2 = Bounds[0];
     B_goth_r2 = Bounds[1];
     
-
     // Square of B_goth = sqrt(B_goth_s^2 + B_goth_r^2 + t0)
     B_goth2 = B_goth_s2 + B_goth_r2 + t0;
 
@@ -1285,34 +1274,29 @@ long Verify_ISIS(const uint8_t* seed_crs, const CRS_t& crs, const uint8_t* ipk_b
     Pi_bytes += len_in;
 
     
-    // 7. a_2 ← z_3,   a2 ∈ Z^256_(q_hat)
-    // a_2 << Pi.z_3;
+    // 7. a2 ← (z_3, t_g)    
+    // 8. a3 ← h    
+    // 9. a4 ← (t, w, f0)
     
-    // 8. a_3 ← h,   a_3 ∈ R^^(tau)_(q_hat)    
-    // a_3 << Pi.h;
-    
-    // 9. a_4 ← (t, f0),   a_4 ∈ R^^2_(q_hat)
-    // a_4 << Pi.t << Pi.f0;
-    
-    // 10. (R_goth_0, R_goth_1) = H(1, crs, x, a_1)
+    // 10. (R_goth_0, R_goth_1) = H(crs, x, a_1, 1)
     // 11. R_goth = R_goth_0 - R_goth_1
     HISIS1(R_goth, state, m1);
     // NOTE: R_goth ∈ {-1, 0, 1}^(256 x m_1*d_hat) ⊂ Z^(256 x m_1*d_hat)_(q_hat)
     //       equivalent to (R_goth_0 - R_goth_1) in BLNS
 
-    // 12. gamma ← H(2, crs, x, a1, a2),   gamma ∈ Z^(tau_ISIS x 256+d0+3)_(q_hat)
+    // 12. gamma ← H(crs, x, a1, a2, 2),   gamma ∈ Z^(tau_ISIS x 256+d0+3)_(q_hat)
     len_in = len_z_3 + len_t_g;
     Hash_Update(state, Pi_bytes, len_in);
     Pi_bytes += len_in;
     HISIS2(gamma, state);   
     // NOTE: gamma has 256+d0+3 columns in ISIS, while 256+d0+1 in Com
 
-    // 13. μ ← H(3, crs, x, a1, a2, a3),   μ ∈ R^^(τ)_(q_hat)
+    // 13. μ ← H(crs, x, a1, a2, a3, 3),   μ ∈ R^^(τ)_(q_hat)
     Hash_Update(state, Pi_bytes, len_h);
     Pi_bytes += len_h;
     HISIS3(mu, state);
 
-    // 14. c ← H(4, crs, x, a1, a2, a3, a4),   c ∈ C ⊂ R^_(q_hat)
+    // 14. c ← H(crs, x, a1, a2, a3, a4, 4),   c ∈ C ⊂ R^_(q_hat)
     len_in = len_t + len_w + len_f0;
     Hash_Update(state, Pi_bytes, len_in);
     // Pi_bytes += len_in;    
@@ -1327,7 +1311,7 @@ long Verify_ISIS(const uint8_t* seed_crs, const CRS_t& crs, const uint8_t* ipk_b
     B.SetDims((n256 + tau_ISIS), m2);
 
     // 16. t_B ← [t_y; t_g],   t_B ∈ R^^(256/d_hat + tau)_(q_hat)
-    t_B.SetLength(n256 + tau_ISIS);    
+    t_B.SetLength(n256 + tau_ISIS);
 
     for(i=0; i<n256; i++) 
     {
