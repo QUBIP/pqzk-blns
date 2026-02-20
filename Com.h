@@ -18,21 +18,20 @@
 #include <algorithm>
 
 #include "params.h"
-#include "LHC.h"
+#include "Rej.h"
 #include "Hash.h"
 #include "Squares.h"
 #include "serialize.h"
+#include "Lattice.h"
 
 typedef struct
 {
     long            valid = 0;
     vec_zz_pX       t_A, t_y, t_g, w;
-    LHC_COM_t       com_1, com_2;
     vec_zz_p        z_3;
     vec_zz_pX       h;
     zz_pX           t, f0;
     vec_zz_pX       z_1,  z_2;
-    LHC_OP_t        op_1, op_2;
 } PROOF_C_t;
 
 

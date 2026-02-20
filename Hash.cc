@@ -250,7 +250,7 @@ void Hcrs(CRS2_t& crs, mat_zz_p& B_f, const uint8_t* seed_crs, const long &num_i
     // Create the crs structure  
     crs.SetLength(2); 
     crs[0].SetLength(5); // crs_ISIS
-    crs[1].SetLength(9); // crs_Com
+    crs[1].SetLength(5); // crs_Com
 
     // ###########################  crs_ISIS  #########################################
     {
@@ -349,10 +349,6 @@ void Hcrs(CRS2_t& crs, mat_zz_p& B_f, const uint8_t* seed_crs, const long &num_i
         // crs[1][2] = B_y;
         // crs[1][3] = B_g;
         // crs[1][4] = b;
-        // crs[1][5] = A_bar_1;
-        // crs[1][6] = A_bar_2;
-        // crs[1][7] = B_bar_1;
-        // crs[1][8] = B_bar_2;
             
         // Random generation of A_1 ∈ R^(n x m_1)_(q_hat)   
         //                      A_2 ∈ R^(n x m_2)_(q_hat)      
@@ -402,32 +398,6 @@ void Hcrs(CRS2_t& crs, mat_zz_p& B_f, const uint8_t* seed_crs, const long &num_i
             // for(j=0; j<1; j++)
             {
                 Hash_zz_pX(crs[1][4][0][i], state, d_hat, b_coeffs);
-            }
-        }
-        
-        // Random generation of A_bar_1, B_bar_1 ∈ R^(m_1 x n_1)_(q_hat)
-        crs[1][5].SetDims(m1, n_i);
-        crs[1][7].SetDims(m1, n_i);       
-        
-        for(i=0; i<m1; i++)
-        {
-            for(j=0; j<n_i; j++)
-            {
-                Hash_zz_pX(crs[1][5][i][j], state, d_hat, b_coeffs);
-                Hash_zz_pX(crs[1][7][i][j], state, d_hat, b_coeffs);
-            }
-        }
-
-        // Random generation of A_bar_2, B_bar_2 ∈ R^(m_2 x n_2)_(q_hat)
-        crs[1][6].SetDims(m2, n_i);
-        crs[1][8].SetDims(m2, n_i);       
-        
-        for(i=0; i<m2; i++)
-        {
-            for(j=0; j<n_i; j++)
-            {
-                Hash_zz_pX(crs[1][6][i][j], state, d_hat, b_coeffs);
-                Hash_zz_pX(crs[1][8][i][j], state, d_hat, b_coeffs);
             }
         }
     }
