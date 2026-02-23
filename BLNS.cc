@@ -30,7 +30,7 @@ int main()
     vec_UL          idx_pub, idx_hid;
     ISK_t           isk;
     uint8_t        *ipk;
-    uint8_t         seed_crs[SEED_LEN];
+    uint8_t         seed_crs[SEED_LEN], nonce[NONCE_LEN];
     Vec<string>     attrs;
     mat_zz_p        B_f;
     CRS2_t          crs;
@@ -133,15 +133,22 @@ int main()
         cout << "\n=====================================================================" << endl;
         cout << "  PRESENTATION PROTOCOL" << endl;
         cout << "=====================================================================" << endl;
+        
+        cout << "\n- Verifier.Challenge    (generate a random nonce)" << endl;
+        ta = GetWallTime();
+        GenRandBytes(reinterpret_cast<unsigned char*>(nonce), NONCE_LEN);
+        tb = GetWallTime();        
+        cout << "  CPU time: " << (tb - ta) << " s" << endl;
+        
         ta = GetWallTime();
         cout << "\n- Holder.VerPres        (prove knowledge of signature and attributes)" << endl;
-        H_VerPres(VP, cred, seed_crs, crs, ipk, B_f, attrs, idx_pub);
+        H_VerPres(VP, cred, nonce, seed_crs, crs, ipk, B_f, attrs, idx_pub);
         tb = GetWallTime();        
         cout << "  CPU time: " << (tb - ta) << " s" << endl;
 
         ta = GetWallTime();
         cout << "\n- Verifier.Verify       (verify proof and authorize)" << endl;
-        valid = V_Verify(VP, seed_crs, crs, B_f, idx_pub);
+        valid = V_Verify(VP, nonce, seed_crs, crs, B_f, idx_pub);
         tb = GetWallTime();        
         cout << "  CPU time: " << (tb - ta) << " s" << endl;
 
@@ -160,11 +167,14 @@ int main()
             Wait_till_next_min(0, 61);
             cout << "=====================================================================\n";
 
+            cout << "\n- Verifier.Challenge    (generate a random nonce)" << endl;
+            GenRandBytes(reinterpret_cast<unsigned char*>(nonce), NONCE_LEN);
+            
             cout << "\n- Holder.VerPres        (prove knowledge of signature and attributes)" << endl;
-            H_VerPres(VP, cred, seed_crs, crs, ipk, B_f, attrs, idx_pub);
+            H_VerPres(VP, cred, nonce, seed_crs, crs, ipk, B_f, attrs, idx_pub);
             
             cout << "\n- Verifier.Verify       (verify proof and authorize)" << endl;
-            valid = V_Verify(VP, seed_crs, crs, B_f, idx_pub);
+            valid = V_Verify(VP, nonce, seed_crs, crs, B_f, idx_pub);
             
             // cout << "\n  Credential EXPIRED!" << endl;
             assert(valid == 0);
@@ -210,11 +220,14 @@ int main()
             cout << "  PRESENTATION PROTOCOL" << endl;
             cout << "=====================================================================" << endl;
 
+            cout << "\n- Verifier.Challenge    (generate a random nonce)" << endl;
+            GenRandBytes(reinterpret_cast<unsigned char*>(nonce), NONCE_LEN);
+            
             cout << "\n- Holder.VerPres        (prove knowledge of signature and attributes)" << endl;
-            H_VerPres(VP, cred, seed_crs, crs, ipk, B_f, attrs, idx_pub);
+            H_VerPres(VP, cred, nonce, seed_crs, crs, ipk, B_f, attrs, idx_pub);
             
             cout << "\n- Verifier.Verify       (verify proof and authorize)" << endl;
-            valid = V_Verify(VP, seed_crs, crs, B_f, idx_pub);
+            valid = V_Verify(VP, nonce, seed_crs, crs, B_f, idx_pub);
 
             if (valid)
             {
