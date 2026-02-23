@@ -21,6 +21,7 @@
 #include "Com.h"
 #include "ISIS.h"
 #include "serialize.h"
+#include "Utils.h"
 
 typedef struct
 {

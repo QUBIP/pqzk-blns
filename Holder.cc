@@ -35,14 +35,8 @@ void H_Init(CRS2_t& crs, mat_zz_p& B_f, uint8_t* seed_crs, Vec<string>& attrs, c
 
     // Initialize a 32 byte (256 bit) public seed for common random string (crs) structure,
     // using the cryptographically strong pseudo-random number generator from NTL
-    RandomStream& RS = GetCurrentRandomStream();
-    RS.get(reinterpret_cast<unsigned char*>(seed_crs), SEED_LEN);
-    // for(i=0; i<SEED_LEN; i++)
-    // {
-    //     printf("%0x", seed_crs[i]);
-    // }
-    // printf("\n");
-    
+    GenRandBytes(reinterpret_cast<unsigned char*>(seed_crs), SEED_LEN);    
+        
     // Generation of crs structure, using H_crs custom Hash function     
     Hcrs(crs, B_f, seed_crs, num_idx_hid);
     // NOTE: crs contains 3D uniformly random matrices mod q_hat,
