@@ -34,7 +34,6 @@ void I_KeyGen(uint8_t** ipk_prt, ISK_t& isk)
     zz_pX           a1;
     size_t          len_a1, len_ipk;
     uint8_t         *ipk_bytes;
-    unsigned char   *seed_bytes;
 
     const int   nbits   = ceil(log2(conv<double>(q0-1)));
 
@@ -61,11 +60,10 @@ void I_KeyGen(uint8_t** ipk_prt, ISK_t& isk)
     // Serialize a1 (first bytes in ipk_bytes)
     serialize_minbyte_poly_zz_pX(ipk_bytes, len_a1, d0, nbits, a1);   
 
-    // Initialize a 32 byte (256 bit) public seed for completing ipk (i.e. a2, c0, c1),
+    // Initialize a 32 byte (256 bit) public seed_ipk for completing ipk (i.e. a2, c0, c1),
     // using the cryptographically strong pseudo-random number generator from NTL.
     // Store seed_ipk in the last bytes (SEED_LEN) of ipk_bytes
-    seed_bytes = reinterpret_cast<unsigned char*>(ipk_bytes + len_a1);
-    GenRandBytes(seed_bytes, SEED_LEN);
+    GenRandBytes((ipk_bytes + len_a1), SEED_LEN);
                   
     // Output Issuer Public Key and Issuer Secret Key (i.e. B)
     // CompleteIPK(ipk, ipk_bytes);

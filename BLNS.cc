@@ -136,7 +136,7 @@ int main()
         
         cout << "\n- Verifier.Challenge    (generate a random nonce)" << endl;
         ta = GetWallTime();
-        GenRandBytes(reinterpret_cast<unsigned char*>(nonce), NONCE_LEN);
+        GenRandBytes(nonce, NONCE_LEN);
         tb = GetWallTime();        
         cout << "  CPU time: " << (tb - ta) << " s" << endl;
         
@@ -168,7 +168,7 @@ int main()
             cout << "=====================================================================\n";
 
             cout << "\n- Verifier.Challenge    (generate a random nonce)" << endl;
-            GenRandBytes(reinterpret_cast<unsigned char*>(nonce), NONCE_LEN);
+            GenRandBytes(nonce, NONCE_LEN);
             
             cout << "\n- Holder.VerPres        (prove knowledge of signature and attributes)" << endl;
             H_VerPres(VP, cred, nonce, seed_crs, crs, ipk, B_f, attrs, idx_pub);
@@ -221,7 +221,7 @@ int main()
             cout << "=====================================================================" << endl;
 
             cout << "\n- Verifier.Challenge    (generate a random nonce)" << endl;
-            GenRandBytes(reinterpret_cast<unsigned char*>(nonce), NONCE_LEN);
+            GenRandBytes(nonce, NONCE_LEN);
             
             cout << "\n- Holder.VerPres        (prove knowledge of signature and attributes)" << endl;
             H_VerPres(VP, cred, nonce, seed_crs, crs, ipk, B_f, attrs, idx_pub);

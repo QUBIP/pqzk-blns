@@ -25,7 +25,7 @@
     vec_ZZ      int16ToVecZZ(const int16_t* arr, size_t len);
 #endif
 
-void        GenRandBytes(unsigned char *out, const long n);
+void        GenRandBytes(uint8_t *out, const long n);
 
 ZZX         Phi();
 

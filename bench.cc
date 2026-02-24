@@ -230,7 +230,7 @@ int main()
         cout << "\n- Verifier.Challenge    (generate a random nonce)" << endl;
         #endif
         ta = GetWallTime();
-        GenRandBytes(reinterpret_cast<unsigned char*>(nonce), NONCE_LEN);
+        GenRandBytes(nonce, NONCE_LEN);
         tb = GetWallTime();
         #ifdef VERBOSE
         cout << "  CPU time: " << (tb - ta) << " s" << endl;    

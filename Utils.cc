@@ -113,10 +113,10 @@
 // GenRandBytes - Generate n random bytes using the cryptographically strong 
 //                pseudo-random number generator from NTL
 //==============================================================================
-void GenRandBytes(unsigned char *out, const long n)
+void GenRandBytes(uint8_t *out, const long n)
 {
-    RandomStream& RS = GetCurrentRandomStream();    
-    RS.get(out, n);
+    RandomStream& RS = GetCurrentRandomStream();
+    RS.get(reinterpret_cast<unsigned char*>(out), n);
 
     // for(long i=0; i<n; i++)
     // {
