@@ -827,7 +827,7 @@ vec_UL Compute_idx_hid(const vec_UL &idx_pub)
 
     for(i=0; i<l0; i++)
     {
-        if ((R > 0) && (i == idx_pub[j]))
+        if ((R > 0) && (j < R) && (i == idx_pub[j]))
         {
             j++;
         }
