@@ -89,7 +89,7 @@ int main()
     CRS2_t          crs;
     CRED_t          cred;
     VP_t            VP;
-    long            iter, N, valid;
+    long            iter, iter_warm, iter_tot, W, N, valid;
     double          t1, t2, ta, tb;  
 
     idx_pub = conv<vec_UL>("[4 5 6 7]");    // Indexes of disclosed attributes (revealed, i.e. idx)
@@ -97,16 +97,29 @@ int main()
     // NOTE: both are vectors of non-negative integers in ascending order (one could be the empty array)
     // NOTE: in principle, Holder can use different indexes during Issuing and Presentation protocols
  
-    N = 100; //1100; // Number of iterations, for benchmarking purposes
+    W = 10;  //100;  // Number of warm-up iterations, to be executed before the actual benchmarking iterations
+    N = 100; //1000; // Number of iterations, for benchmarking purposes
 
     Perfo.SetDims(10, N);
-    
-    for(iter=0; iter<N; iter++)
-    {
+
+    iter_warm = 0;
+    iter      = 0;
+
+    for(iter_tot = 0; iter_tot < (W+N); iter_tot++)
+    {       
         #ifdef VERBOSE
-        cout << "\n#####################################################################" << endl;
-        cout << "  ITERATION: " << iter+1 << " of " << N << endl;
-        cout << "#####################################################################" << endl;
+        if (iter_tot < W)
+        {
+            cout << "\n#####################################################################" << endl;
+            cout << "  WARM-UP:   " << iter_warm+1 << " of " << W << endl;
+            cout << "#####################################################################" << endl;
+        }
+        else
+        {
+            cout << "\n#####################################################################" << endl;
+            cout << "  ITERATION: " << iter+1 << " of " << N << endl;
+            cout << "#####################################################################" << endl;
+        }
         
         cout << "\n- Issuer.KeyGen         (key generation)" << endl;
         #endif
@@ -271,12 +284,29 @@ int main()
             cout << "\n=====================================================================\n";
             cout << "  TOT time: " << (t3 - t1) << " s  (" << (t3 - t2) << " s)" << endl;    
         #else
-            cout << "  ITERATION: " << iter+1 << " of " << N << " - TOT time: " << (t3 - t1) << " s" << endl;
+            if (iter_tot < W)
+            {
+                cout << "  WARM-UP:   " << iter_warm+1 << " of " << W << " - TOT time: " << (t3 - t1) << " s" << endl;
+            }
+            else
+            {
+                cout << "  ITERATION: " << iter+1      << " of " << N << " - TOT time: " << (t3 - t1) << " s" << endl;
+            }
         #endif
-        
+
+        if (iter_tot < W)
+        {
+            iter_warm++;
+        }
+        else
+        {
+            iter++;
+        }
+
         // Free up memory
         delete[] ipk;
-    }
+
+    } // end for for loop (iter_tot)
 
     
     // Store raw measurements in a text file        
@@ -307,11 +337,11 @@ int main()
     cout << "- Verifier.Verify:   " << stats(Perfo[6]) << endl << endl;    
     
     cout << "- TOTAL time:        " << stats(Perfo[7]) << endl << endl;    
-        
-    #ifdef VERBOSE
+    
+    #ifdef USE_ISSUER_BLIND_SIGNATURE
     cout << "- Prove_Com  trials: " << stats(Perfo[8]) << endl;
-    cout << "- Prove_ISIS trials: " << stats(Perfo[9]) << endl << endl;
     #endif
+    cout << "- Prove_ISIS trials: " << stats(Perfo[9]) << endl << endl;
 
     return 0;
 }
