@@ -25,6 +25,8 @@
     vec_ZZ      int16ToVecZZ(const int16_t* arr, size_t len);
 #endif
 
+void        GenRandBytes(uint8_t *out, const long n);
+
 ZZX         Phi();
 
 ZZX         ModPhi(const ZZX& p);

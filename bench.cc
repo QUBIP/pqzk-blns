@@ -83,7 +83,7 @@ int main()
     vec_UL          idx_pub, idx_hid;
     ISK_t           isk;
     uint8_t        *ipk;
-    uint8_t         seed_crs[SEED_LEN];
+    uint8_t         seed_crs[SEED_LEN], nonce[NONCE_LEN];
     Vec<string>     attrs;
     mat_zz_p        B_f;
     CRS2_t          crs;
@@ -226,11 +226,19 @@ int main()
         cout << "\n=====================================================================" << endl;
         cout << "  PRESENTATION PROTOCOL" << endl;
         cout << "=====================================================================" << endl;
-        
+                
+        cout << "\n- Verifier.Challenge    (generate a random nonce)" << endl;
+        #endif
+        ta = GetWallTime();
+        GenRandBytes(nonce, NONCE_LEN);
+        tb = GetWallTime();
+        #ifdef VERBOSE
+        cout << "  CPU time: " << (tb - ta) << " s" << endl;    
+
         cout << "\n- Holder.VerPres        (prove knowledge of signature and attributes)" << endl;
         #endif
         ta = GetWallTime();        
-        H_VerPres(VP, cred, seed_crs, crs, ipk, B_f, attrs, idx_pub);
+        H_VerPres(VP, cred, nonce, seed_crs, crs, ipk, B_f, attrs, idx_pub);
         tb = GetWallTime();
         #ifdef VERBOSE    
         cout << "  CPU time: " << (tb - ta) << " s" << endl;
@@ -243,7 +251,7 @@ int main()
         cout << "\n- Verifier.Verify       (verify proof and authorize)" << endl;
         #endif
         ta = GetWallTime();
-        valid = V_Verify(VP, seed_crs, crs, B_f, idx_pub);
+        valid = V_Verify(VP, nonce, seed_crs, crs, B_f, idx_pub);
         tb = GetWallTime();
         Perfo[6][iter] = tb - ta;
         #ifdef VERBOSE    

@@ -110,6 +110,25 @@
 
 
 //==============================================================================
+// GenRandBytes - Generate n random bytes using the cryptographically strong 
+//                pseudo-random number generator from NTL
+//==============================================================================
+void GenRandBytes(uint8_t *out, const long n)
+{
+    RandomStream& RS = GetCurrentRandomStream();
+    RS.get(reinterpret_cast<unsigned char*>(out), n);
+
+    // for(long i=0; i<n; i++)
+    // {
+    //     printf("%02x", out[i]);
+    // }
+    // printf("\n");
+
+    // return out
+}
+
+
+//==============================================================================
 // Phi - Function to define phi = X^d0 + 1
 //==============================================================================
 ZZX Phi()
@@ -808,7 +827,7 @@ vec_UL Compute_idx_hid(const vec_UL &idx_pub)
 
     for(i=0; i<l0; i++)
     {
-        if ((R > 0) && (i == idx_pub[j]))
+        if ((R > 0) && (j < R) && (i == idx_pub[j]))
         {
             j++;
         }
