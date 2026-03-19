@@ -25,11 +25,61 @@ mat_D       Perfo;
 
 
 //=================================================================================
+// compare_D - Compare two double values for qsort function.
+//=================================================================================
+int compare_D(const void *a, const void *b)
+{
+    double da = *(const double*)a;
+    double db = *(const double*)b;
+
+    if (da < db)
+    {
+        return -1;
+    }
+    if (da > db)
+    {
+        return 1;
+    }
+    return 0;
+}
+
+
+//=================================================================================
+// compute_median - Compute the median on an input vector.
+//=================================================================================
+double compute_median(const vec_D v, const long len)
+{
+    long i;    
+    double sorted[len];
+
+    for (i = 0; i < len; i++) 
+    {
+        sorted[i] = v[i];
+    }
+
+    // Sort the array in ascending order
+    qsort(sorted, len, sizeof(double), compare_D);
+
+    if (len % 2 == 0)
+    {
+        // Even elements: average of the two middle elements
+        return (sorted[(len/2) - 1] + sorted[len/2]) / 2.0;
+    }
+    else
+    {
+        // Odd elements: the middle element
+        return sorted[(len-1)/2];
+    }
+
+}
+
+
+//=================================================================================
 // stats - Compute statistics on an input vector, return the results as a string.
 //=================================================================================
 string stats(const vec_D v)
 {
-    double  min, max, avg, sigma, sum, diff;
+    double  min, max, avg, median, sigma, sum, diff;
     long    i, len;
 
     // Find minimum and maximum values
@@ -51,6 +101,9 @@ string stats(const vec_D v)
 
     // Compute average    
     avg = accumulate(v.begin(), v.end(), 0.0) / len; 
+
+    // Compute median
+    median = compute_median(v, len);
     
     // Compute standard deviation
     sum = 0.0;    
@@ -64,7 +117,7 @@ string stats(const vec_D v)
 
     // Return a string with results
     char buf[100];
-    sprintf(buf, "min = %-8.5f  max = %-8.5f  avg = %-8.5f  std = %-8.5f", min, max, avg, sigma);
+    sprintf(buf, "min = %-8.5f  max = %-8.5f  avg = %-8.5f  med = %-8.5f  std = %-8.5f", min, max, avg, median, sigma);
 
     return string(buf);
 }
