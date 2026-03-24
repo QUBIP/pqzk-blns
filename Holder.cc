@@ -979,7 +979,7 @@ void H_ReqUpdate(uint8_t** u_ptr, string& old_timestamp, string& new_timestamp, 
 
     // Get the timestamp for the current date/time and update the corresponding attribute
     old_timestamp = attrs[IDX_TIMESTAMP];
-    new_timestamp = Get_timestamp(1);
+    new_timestamp = Get_timestamp(0);
     attrs[IDX_TIMESTAMP] = new_timestamp;
 
     // Update m ← Coeffs^−1( H_M(a1), ... , H_M(a_l) ) ∈ R^ℓm
@@ -1090,7 +1090,7 @@ void H_ReqUpd_Plain(uint8_t** u_ptr, string& old_timestamp, string& new_timestam
 
     // Get the timestamp for the current date/time and update the corresponding attribute
     old_timestamp = attrs[IDX_TIMESTAMP];
-    new_timestamp = Get_timestamp(1);
+    new_timestamp = Get_timestamp(0);
     attrs[IDX_TIMESTAMP] = new_timestamp;
 
     // Update m ← Coeffs^−1( H_M(a1), ... , H_M(a_l) ) ∈ R^ℓm

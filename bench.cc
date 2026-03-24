@@ -135,7 +135,7 @@ int main()
     
     vec_UL          idx_pub, idx_hid;
     ISK_t           isk;
-    uint8_t        *ipk;
+    uint8_t        *ipk, *u;
     uint8_t         seed_crs[SEED_LEN], nonce[NONCE_LEN];
     Vec<string>     attrs;
     mat_zz_p        B_f;
@@ -143,7 +143,8 @@ int main()
     CRED_t          cred;
     VP_t            VP;
     long            iter, iter_warm, iter_tot, W, N, valid;
-    double          t1, t2, ta, tb;  
+    double          t1, t2, ta, tb;
+    string          old_timestamp, new_timestamp;
 
     idx_pub = conv<vec_UL>("[4 5 6 7]");    // Indexes of disclosed attributes (revealed, i.e. idx)
     idx_hid = Compute_idx_hid(idx_pub);     // Indexes of undisclosed attributes (hidden, i.e. \overline{\idx})
@@ -153,7 +154,7 @@ int main()
     W = 10;  //100;  // Number of warm-up iterations, to be executed before the actual benchmarking iterations
     N = 100; //1000; // Number of iterations, for benchmarking purposes
 
-    Perfo.SetDims(10, N);
+    Perfo.SetDims(13, N);
 
     iter_warm = 0;
     iter      = 0;
@@ -347,6 +348,70 @@ int main()
             }
         #endif
 
+
+        #ifdef VERBOSE
+        cout << "\n=====================================================================\n";
+        cout << "  UPDATE CREDENTIAL" << endl;
+        cout << "=====================================================================\n";
+        #endif
+
+        #ifdef USE_ISSUER_SIGNATURE
+
+            uint8_t        *Rho2;
+            STATE_t         state;
+
+            #ifdef VERBOSE
+            cout << "\n- Holder.ReqUpd_Plain   (request an updated signature)" << endl;
+            #endif
+            ta = GetWallTime();
+            H_ReqUpd_Plain(&u, old_timestamp, new_timestamp, state, attrs, ipk, cred);
+            tb = GetWallTime();
+            #ifdef VERBOSE
+            cout << "  CPU time: " << (tb - ta) << " s" << endl;
+            #endif
+            Perfo[10][iter] = tb - ta;
+            
+        #endif
+        // #else
+        #ifdef USE_ISSUER_BLIND_SIGNATURE
+
+            #ifdef VERBOSE
+            cout << "\n- Holder.ReqUpdate      (request an updated signature)" << endl;
+            #endif
+            ta = GetWallTime();
+            H_ReqUpdate(&u, old_timestamp, new_timestamp, state, attrs, ipk);
+            tb = GetWallTime();
+            #ifdef VERBOSE
+            cout << "  CPU time: " << (tb - ta) << " s" << endl;
+            #endif
+            Perfo[10][iter] = tb - ta;
+
+        #endif
+            
+        #ifdef VERBOSE
+        cout << "\n- Issuer.UpdateSign     (update signature)" << endl;
+        #endif
+        ta = GetWallTime();
+        I_UpdateSign(&Rho2, B_f, ipk, isk, u, old_timestamp, new_timestamp);
+        tb = GetWallTime();
+        #ifdef VERBOSE
+        cout << "  CPU time: " << (tb - ta) << " s" << endl;
+        #endif
+        Perfo[11][iter] = tb - ta;
+        
+        #ifdef VERBOSE
+        cout << "\n- Holder.VerCred2       (check signature and store credential)" << endl;
+        #endif
+        ta = GetWallTime();
+        H_VerCred2(cred, ipk, B_f, &Rho2, state);
+        tb = GetWallTime();
+        #ifdef VERBOSE
+        cout << "  CPU time: " << (tb - ta) << " s" << endl;
+        #endif
+        Perfo[12][iter] = tb - ta;
+        assert(cred.valid);
+
+
         if (iter_tot < W)
         {
             iter_warm++;
@@ -369,32 +434,43 @@ int main()
     file.close();
 
     // Display the benchmark results
-    cout << "\n######################################################################################" << endl;
+    cout << "\n####################################################################################################" << endl;
     cout << "  BENCHMARK RESULTS in seconds (N = " << N << ")" << endl << endl;
         
-    cout << "- Issuer.KeyGen:     " << stats(Perfo[0]) << endl;
-    cout << "- Holder.Init:       " << stats(Perfo[1]) << endl << endl;
+    cout << "- Issuer.KeyGen:       " << stats(Perfo[0]) << endl;
+    cout << "- Holder.Init:         " << stats(Perfo[1]) << endl << endl;
     
     #ifdef USE_ISSUER_SIGNATURE
-    cout << "- I.VerCred_Plain:   " << stats(Perfo[3]) << endl;
-    cout << "- H.VerCred_Plain:   " << stats(Perfo[4]) << endl << endl;    
+    cout << "- I.VerCred_Plain:     " << stats(Perfo[3]) << endl;
+    cout << "- H.VerCred_Plain:     " << stats(Perfo[4]) << endl << endl;    
     #endif
 
     #ifdef USE_ISSUER_BLIND_SIGNATURE
-    cout << "- Holder.VerCred1:   " << stats(Perfo[2]) << endl;
-    cout << "- Issuer.VerCred:    " << stats(Perfo[3]) << endl;
-    cout << "- Holder.VerCred2:   " << stats(Perfo[4]) << endl << endl;    
+    cout << "- Holder.VerCred1:     " << stats(Perfo[2]) << endl;
+    cout << "- Issuer.VerCred:      " << stats(Perfo[3]) << endl;
+    cout << "- Holder.VerCred2:     " << stats(Perfo[4]) << endl << endl;    
     #endif
 
-    cout << "- Holder.VerPres:    " << stats(Perfo[5]) << endl;
-    cout << "- Verifier.Verify:   " << stats(Perfo[6]) << endl << endl;    
+    cout << "- Holder.VerPres:      " << stats(Perfo[5]) << endl;
+    cout << "- Verifier.Verify:     " << stats(Perfo[6]) << endl << endl;    
     
-    cout << "- TOTAL time:        " << stats(Perfo[7]) << endl << endl;    
+    cout << "- TOTAL time:          " << stats(Perfo[7]) << endl;
+    cout << "####################################################################################################" << endl << endl;
     
     #ifdef USE_ISSUER_BLIND_SIGNATURE
-    cout << "- Prove_Com  trials: " << stats(Perfo[8]) << endl;
+    cout << "- Prove_Com  trials:   " << stats(Perfo[8]) << endl;
     #endif
-    cout << "- Prove_ISIS trials: " << stats(Perfo[9]) << endl << endl;
+    cout << "- Prove_ISIS trials:   " << stats(Perfo[9]) << endl << endl;
+    
+    #ifdef USE_ISSUER_SIGNATURE
+    cout << "- Holder.ReqUpd_Plain: " << stats(Perfo[10]) << endl;
+    #endif
+    // #else
+    #ifdef USE_ISSUER_BLIND_SIGNATURE
+    cout << "- Holder.ReqUpdate:    " << stats(Perfo[10]) << endl;
+    #endif
+    cout << "- Issuer.UpdateSign:   " << stats(Perfo[11]) << endl;
+    cout << "- Holder.VerCred2:     " << stats(Perfo[12]) << endl;
 
     return 0;
 }
