@@ -617,7 +617,6 @@ void I_VerCred_Plain(uint8_t** Rho_ptr, const mat_zz_p& B_f, const uint8_t* ipk_
 }
 
 
-#ifdef USE_REVOCATION
 //==============================================================================
 // I_UpdateSign  -  Modified Issuer.VerCred function, for updating the signature
 // 
@@ -652,11 +651,11 @@ void I_UpdateSign(uint8_t** Rho2_ptr, const mat_zz_p& B_f, const uint8_t* ipk_by
     
     const int       nbits   = ceil(log2(conv<double>(q0-1)));
 
-    
-    // Check if new_timestamp corresponds to the current time
-    assert( new_timestamp == Get_timestamp(1) );
-    // NOTE: Issuer must also check that u and old_timestamp correspond to a previously issued credential (not revoked)
-
+    #ifdef USE_REVOCATION
+        // Check if new_timestamp corresponds to the current time
+        assert( new_timestamp == Get_timestamp(1) );
+        // NOTE: Issuer must also check that u and old_timestamp correspond to a previously issued credential (not revoked)
+    #endif
         
     // (a1, a2, c0, c1) ← ipk,   ipk ∈ R_q × R^m_q × R^ℓm_q × R^ℓr_q
     CompleteIPK(ipk, ipk_bytes);
@@ -826,4 +825,3 @@ void I_UpdateSign(uint8_t** Rho2_ptr, const mat_zz_p& B_f, const uint8_t* ipk_by
 
     // return ρ_2
 }
-#endif

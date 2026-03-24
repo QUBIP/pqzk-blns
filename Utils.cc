@@ -842,27 +842,27 @@ vec_UL Compute_idx_hid(const vec_UL &idx_pub)
 }
 
 
-#ifdef  USE_REVOCATION
+//=================================================================================
+// Get_timestamp - Return the timestamp for the current date/time.
+//=================================================================================
+string Get_timestamp(const bool print_timestamp)
+{
+    char    timestamp[50];
+    time_t  ts = time(NULL);
+    struct  tm datetime = *localtime(&ts);
 
-    //=================================================================================
-    // Get_timestamp - Return the timestamp for the current date/time.
-    //=================================================================================
-    string Get_timestamp(const bool print_timestamp)
+    strftime(timestamp, 50, "%e-%B-%Y-%H:%M", &datetime);
+
+    if (print_timestamp)
     {
-        char    timestamp[50];
-        time_t  ts = time(NULL);
-        struct  tm datetime = *localtime(&ts);
-
-        strftime(timestamp, 50, "%e-%B-%Y-%H:%M", &datetime);
-
-        if (print_timestamp)
-        {
-            cout << "  Timestamp: " << timestamp << endl;
-        }
-
-        return string(timestamp);
+        cout << "  Timestamp: " << timestamp << endl;
     }
 
+    return string(timestamp);
+}
+
+
+#ifdef  USE_REVOCATION
 
     //=================================================================================
     // Wait_till_next_min - If necessary, WAIT until the next integer minute.

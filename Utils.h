@@ -63,11 +63,12 @@ double      InnerProdD(    const vec_D& a, const vec_D& b );
 
 vec_UL      Compute_idx_hid(const vec_UL& idx_pub);
 
+string      Get_timestamp(const bool print_timestamp);
+
 #ifdef  USE_REVOCATION
 
     #include <unistd.h>        // Needed for using the sleep function
 
-    string  Get_timestamp(const bool print_timestamp);
     void    Wait_till_next_min(const bool print_timestamp, const int min_interval);
 
 #endif
