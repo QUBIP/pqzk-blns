@@ -56,9 +56,7 @@ void    H_VerPres(VP_t& VP, const CRED_t& cred, const uint8_t* nonce, const uint
 
 void    H_VerCred_Plain(CRED_t& cred, const uint8_t* ipk_bytes, const mat_zz_p& B_f, uint8_t** Rho_ptr, const Vec<string>& attrs);
 
-#ifdef USE_REVOCATION
-    void H_ReqUpdate(uint8_t** u_ptr, string& old_timestamp, string& new_timestamp, STATE_t& state, Vec<string>& attrs, const uint8_t* ipk_bytes);
-    void H_ReqUpd_Plain(uint8_t** u_ptr, string& old_timestamp, string& new_timestamp, STATE_t& state, Vec<string>& attrs, const uint8_t* ipk_bytes, const CRED_t& cred);
-#endif
+void    H_ReqUpdate(uint8_t** u_ptr, string& old_timestamp, string& new_timestamp, STATE_t& state, Vec<string>& attrs, const uint8_t* ipk_bytes);
+void    H_ReqUpd_Plain(uint8_t** u_ptr, string& old_timestamp, string& new_timestamp, STATE_t& state, Vec<string>& attrs, const uint8_t* ipk_bytes, const CRED_t& cred);
 
 #endif

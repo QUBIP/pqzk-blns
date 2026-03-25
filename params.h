@@ -123,7 +123,7 @@ typedef Mat<long>   mat_L;
 // #define USE_ISSUER_SIGNATURE     // Enable the Issuing protocol with Signature on Plaintext VC
 
 // #define USE_REVOCATION           // Enable or disable the timestamp-based revocation mechanism
-// #define IDX_TIMESTAMP   7        // Index of the attribute dedicated to the timestamp
+#define IDX_TIMESTAMP  (l0 - 1)     // Index of the (last) attribute, dedicated to the timestamp
                                     // NOTE: it must be a disclosed attribute (revealed)
 
 // #define VERBOSE                  // Enable a verbose output at each iteration

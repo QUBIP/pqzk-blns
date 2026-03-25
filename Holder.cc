@@ -912,7 +912,6 @@ void H_VerCred_Plain(CRED_t& cred, const uint8_t* ipk_bytes, const mat_zz_p& B_f
 }
 
 
-#ifdef USE_REVOCATION
 //==============================================================================
 // H_ReqUpdate   -  Modified Holder.VerCred1 function, to request an updated
 //                  signature in case of a Blind Signature
@@ -970,16 +969,18 @@ void H_ReqUpdate(uint8_t** u_ptr, string& old_timestamp, string& new_timestamp, 
     // Serialize u
     serialize_minbyte_poly_zz_pX(*u_ptr, len_u, d0, nbits, u);
     
-    
-    // If necessary, WAIT until the next integer minute for demonstration purposes
-    Wait_till_next_min(0, 10);
-    // NOTE: avoid to request a credential that will expire in next 10 seconds
+    #ifdef USE_REVOCATION
+
+        // If necessary, WAIT until the next integer minute for demonstration purposes
+        Wait_till_next_min(0, 10);
+        // NOTE: avoid to request a credential that will expire in next 10 seconds
+
+    #endif
 
     // Get the timestamp for the current date/time and update the corresponding attribute
     old_timestamp = attrs[IDX_TIMESTAMP];
-    new_timestamp = Get_timestamp(1);
+    new_timestamp = Get_timestamp(0);
     attrs[IDX_TIMESTAMP] = new_timestamp;
-
 
     // Update m ← Coeffs^−1( H_M(a1), ... , H_M(a_l) ) ∈ R^ℓm
     HM(m_i, new_timestamp);
@@ -1079,14 +1080,17 @@ void H_ReqUpd_Plain(uint8_t** u_ptr, string& old_timestamp, string& new_timestam
     // Serialize u
     serialize_minbyte_poly_zz_pX(*u_ptr, len_u, d0, nbits, u);
     
-    
-    // If necessary, WAIT until the next integer minute for demonstration purposes
-    Wait_till_next_min(0, 10);
-    // NOTE: avoid to request a credential that will expire in next 10 seconds
+    #ifdef USE_REVOCATION
+
+        // If necessary, WAIT until the next integer minute for demonstration purposes
+        Wait_till_next_min(0, 10);
+        // NOTE: avoid to request a credential that will expire in next 10 seconds
+
+    #endif
 
     // Get the timestamp for the current date/time and update the corresponding attribute
     old_timestamp = attrs[IDX_TIMESTAMP];
-    new_timestamp = Get_timestamp(1);
+    new_timestamp = Get_timestamp(0);
     attrs[IDX_TIMESTAMP] = new_timestamp;
 
     // Update m ← Coeffs^−1( H_M(a1), ... , H_M(a_l) ) ∈ R^ℓm
@@ -1111,4 +1115,3 @@ void H_ReqUpd_Plain(uint8_t** u_ptr, string& old_timestamp, string& new_timestam
 
     // Return (u_ptr, old_timestamp, new_timestamp, state, attrs) 
 }
-#endif
